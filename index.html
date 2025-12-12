@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>AirWatch - Real-Time Air Quality Monitor</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      min-height: 100vh;
+      background: linear-gradient(135deg, #050816 0%, #0f172a 50%, #1e293b 100%);
+      color: #f1f5f9;
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      overflow-x: hidden;
+      position: relative;
+    }
+    body::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100"><circle cx="50" cy="50" r="2" fill="%2322c55e" opacity="0.3"><animate attributeName="opacity" values="0.3;0.8;0.3" dur="4s" repeatCount="indefinite"/></circle></svg>') repeat;
+      animation: float 20s linear infinite;
+      pointer-events: none;
+    }
+    @keyframes float { from { transform: translate(0,0); } to { transform: translate(100px,-100px); } }
+
+    /* ====================== LANDING SECTION ====================== */
+    .landing {
+      height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 2rem;
+    }
+    .logo {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 1rem;
+      margin-bottom: 2rem;
+      font-size: 3.5rem;
+      font-weight: 800;
+      letter-spacing: .05em;
+    }
+    .dot {
+      width: 42px; height: 42px;
+      background: radial-gradient(circle at 30% 30%, #86efac, #22c55e);
+      border-radius: 50%;
+      box-shadow: 0 0 30px #22c55e88;
+      animation: pulse 2.5s ease-in-out infinite;
+    }
+    @keyframes pulse {
+      0%,100% { transform: scale(1); opacity: 1; }
+      50% { transform: scale(1.15); opacity: .8; }
+    }
+    h1 {
+      font-size: 4.8rem;
+      background: linear-gradient(to right, #86efac, #22c55e);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      margin-bottom: 1rem;
+    }
+    .landing p {
+      font-size: 1.5rem;
+      color: #94a3b8;
+      max-width: 700px;
+      margin: 0 auto 3rem;
+      line-height: 1.6;
+    }
+    .btn {
+      padding: 1.2rem 3.8rem;
+      font-size: 1.4rem;
+      font-weight: 600;
+      color: #020617;
+      background: linear-gradient(to right, #22c55e, #86efac);
+      border: none;
+      border-radius: 9999px;
+      cursor: pointer;
+      box-shadow: 0 10px 30px rgba(34,197,94,.4);
+      transition: all .3s ease;
+      text-transform: uppercase;
+      letter-spacing: .1em;
+    }
+    .btn:hover {
+      transform: translateY(-6px);
+      box-shadow: 0 20px 40px rgba(34,197,94,.6);
+    }
+
+    /* ====================== DASHBOARD SECTION ====================== */
+    #dashboard-section {
+      min-height: 100vh;
+      padding: 4rem 2rem;
+      background: rgba(15,23,42,0.95);
+    }
+    #dashboard-section h2 {
+      text-align: center;
+      font-size: 3rem;
+      margin-bottom: 3rem;
+      color: #86efac;
+    }
+    /* Here you can put your actual dashboard code (charts, tables, etc.) */
+    .placeholder-dashboard {
+      height: 600px;
+      background: #1e293b;
+      border-radius: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2rem;
+      color: #64748b;
+    }
+
+    /* ====================== UNDER THE GUIDANCE SECTION ====================== */
+    .mentor-section {
+      padding: 6rem 2rem;
+      text-align: center;
+      background: linear-gradient(to top, #0f172a, #1e293b);
+    }
+    .circular-image-container {
+      position: relative;
+      display: inline-block;
+      margin-bottom: 2rem;
+    }
+    .circular-glow {
+      position: absolute;
+      inset: -20px;
+      background: radial-gradient(circle, #22c55e44, transparent);
+      border-radius: 50%;
+      z-index: 1;
+    }
+    .circular-image-wrapper {
+      position: relative;
+      z-index: 2;
+    }
+    .circular-image {
+      width: 220px;
+      height: 220px;
+      border-radius: 50%;
+      overflow: hidden;
+      border: 6px solid #22c55e;
+      box-shadow: 0 0 40px rgba(34,197,94,.7);
+    }
+    .circular-image img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    .image-fallback {
+      width: 100%;
+      height: 100%;
+      background: #334155;
+      color: #86efac;
+      font-size: 5rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .typing {
+      font-size: 2.4rem;
+      font-weight: 700;
+      margin: 1rem 0;
+      color: #86efac;
+      overflow: hidden;
+      white-space: nowrap;
+      border-right: 3px solid #22c55e;
+      animation: typing 4s steps(30) infinite, blink .75s step-end infinite;
+    }
+    @keyframes typing {
+      0% { width: 0; }
+      50% { width: 100%; }
+      100% { width: 0; }
+    }
+    @keyframes blink {
+      from, to { border-color: transparent; }
+      50% { border-color: #22c55e; }
+    }
+    .guide-details p {
+      margin: 0.8rem 0;
+      color: #cbd5e1;
+    }
+    .contact-info {
+      margin: 2rem 0;
+    }
+    .contact-link {
+      color: #86efac;
+      text-decoration: none;
+      margin: 0 1.5rem;
+      font-size: 1.2rem;
+    }
+    .contact-link i {
+      margin-right: .5rem;
+    }
+    .mentor-footer {
+      margin-top: 3rem;
+      font-size: 1.1rem;
+      color: #94a3b8;
+    }
+    footer {
+      text-align: center;
+      padding: 2rem;
+      color: #64748b;
+      font-size: .9rem;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ====================== LANDING PAGE ====================== -->
+  <section class="landing" id="home">
+    <div class="container">
+      <div class="logo">
+        <div class="dot"></div>
+        <div>AirWatch</div>
+      </div>
+
+      <h1>Real-Time Air Quality</h1>
+      <p>Monitor AQI, PM2.5, PM10 and health risks across major Indian cities — updated every few seconds.</p>
+
+      <a href="/dashboard.html" class="btn btn-primary">Begin Your Journey</a>
+    </div>
+  </section>
+
+
+  <!-- ====================== UNDER THE GUIDANCE OF ====================== -->
+  <section class="mentor-section">
+    <div class="circular-image-container">
+      <div class="circular-glow"></div>
+      <div class="circular-image-wrapper">
+        <div class="circular-image">
+          <img src="https://static.readdy.ai/image/74a3053a5b6d3a5badd4b71876f16ed5/27da574a54a0d5a0c35c67c3ae1eeae9.jpeg"
+               alt="Dr. Shashi Shekar TR"
+               onerror="this.style.display='none'; document.getElementById('fallbackImage').style.display='flex';">
+          <div id="fallbackImage" class="image-fallback"><i class="fas fa-user-graduate"></i></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="typing" id="typingName">Dr. Shashi Shekar TR</div>
+
+    <div class="guide-details">
+      <p style="font-size: 1.9rem; font-weight: 600;">Professor – Department of Civil Engineering</p>
+      <p>Treasurer, Zero Waste Society of India (ZWSI-ECSI)</p>
+      <p>IQAC Coordinator – East West Institute of Technology</p>
+    </div>
+
+    <div class="contact-info">
+      <a href="mailto:shashishekhartr@ewit.edu.in" class="contact-link">
+        <i class="fas fa-envelope"></i> shashishekhartr@ewit.edu.in
+      </a>
+      <a href="tel:+919980211355" class="contact-link">
+        <i class="fas fa-phone-alt"></i> +91 99802 11355
+      </a>
+    </div>
+
+    <div class="mentor-footer">
+      Project Mentor • Environmental Intelligence Initiative • IISc Ecosystem
+    </div>
+  </section>
+
+  <footer>
+    Dedicated to promoting cleaner air and public health • 2025
+  </footer>
+
+</body>
+</html>

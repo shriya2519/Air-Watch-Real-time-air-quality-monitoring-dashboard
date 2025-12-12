@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>AirWatch Dashboard - Real-Time Air Quality</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <!-- Chart.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- External CSS -->
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="logo">
+      <span class="dot"></span>
+      <span class="logo-text">AirWatch</span>
+    </div>
+    <div class="topbar-right">
+      <div class="nav-tabs">
+        <button class="nav-tab active" data-page="dashboard">Dashboard</button>
+        <button class="nav-tab" data-page="forecast">Forecast</button>
+        <button class="nav-tab" data-page="analytics">Analytics</button>
+        <button class="nav-tab" data-page="health">Health</button>
+        <button class="nav-tab" data-page="alerts">Alerts</button>
+      </div>
+      <select id="citySelect">
+        <option value="Bengaluru">Bengaluru</option>
+        <option value="Mumbai">Mumbai</option>
+        <option value="Delhi">Delhi</option>
+        <option value="Chennai">Chennai</option>
+      </select>
+    </div>
+  </header>
+
+  <main class="layout">
+    <aside class="sidebar">
+      <h2>Controls</h2>
+
+      <div class="control-group">
+        <h3>Pollutant</h3>
+        <div class="btn-group" id="pollutantButtons">
+          <button class="btn active" data-pollutant="AQI">AQI</button>
+          <button class="btn" data-pollutant="PM2.5">PM2.5</button>
+          <button class="btn" data-pollutant="PM10">PM10</button>
+          <button class="btn" data-pollutant="NO₂">NO₂</button>
+          <button class="btn" data-pollutant="O₃">O₃</button>
+        </div>
+      </div>
+
+      <div class="control-group">
+        <h3>Time Range</h3>
+        <div class="btn-group" id="timeButtons">
+          <button class="btn active" data-range="live">Live</button>
+          <button class="btn" data-range="24h">24h</button>
+          <button class="btn" data-range="7d">7d</button>
+        </div>
+      </div>
+
+      <div class="control-group">
+        <h3>View</h3>
+        <div class="btn-group" id="viewButtons">
+          <button class="btn active" data-view="line">Line</button>
+          <button class="btn" data-view="bar">Bar</button>
+        </div>
+      </div>
+
+      <div class="control-group">
+        <h3>Actions</h3>
+        <button class="btn secondary" id="btnRefreshNow">🔄 Refresh</button>
+        <button class="btn secondary" id="btnToggleRealtime">⏱ Stop Live</button>
+      </div>
+
+      <div class="control-group">
+        <h3>Alert Threshold (AQI)</h3>
+        <input type="number" id="alertThreshold" value="150" class="input-threshold" min="0" />
+      </div>
+    </aside>
+
+    <section class="content">
+      <!-- DASHBOARD PAGE -->
+      <div class="page-section active" id="dashboard-page">
+        <section class="card alert-card" id="alertBanner" style="display: none;">
+          <h4>⚠ High Pollution Alert</h4>
+          <p class="muted" id="alertMessage">AQI crossed the safe limit.</p>
+        </section>
+
+        <section class="cards-row">
+          <div class="card">
+            <h4>Current AQI</h4>
+            <p id="currentAqi" class="card-value">--</p>
+            <span id="aqiStatus" class="badge badge-neutral">Loading...</span>
+            <p id="healthAdvice" class="muted small-text">--</p>
+          </div>
+          <div class="card">
+            <h4>PM2.5 (µg/m³)</h4>
+            <p id="pm25Value" class="card-value">--</p>
+          </div>
+          <div class="card">
+            <h4>PM10 (µg/m³)</h4>
+            <p id="pm10Value" class="card-value">--</p>
+          </div>
+          <div class="card">
+            <h4>Last Updated</h4>
+            <p id="lastUpdated" class="card-value small">--</p>
+          </div>
+        </section>
+
+        <section class="main-row">
+          <div class="card big">
+            <div class="card-header">
+              <div>
+                <h3 id="chartTitle">Live AQI Trend</h3>
+                <p id="chartSubtitle" class="muted">
+                  City: <span id="activeCityLabel">Bengaluru</span> · Pollutant:
+                  <span id="activePollutantLabel">AQI</span>
+                </p>
+              </div>
+            </div>
+            <div class="chart-wrapper">
+              <canvas id="aqiChart"></canvas>
+            </div>
+          </div>
+
+          <div class="card side">
+            <h3>City Snapshot</h3>
+            <ul class="snapshot-list" id="snapshotList"></ul>
+          </div>
+        </section>
+      </div>
+
+      <!-- FORECAST PAGE -->
+      <div class="page-section" id="forecast-page">
+        <div class="card">
+          <h3>24-Hour Forecast</h3>
+          <p class="muted">Predicted AQI levels for the next 24 hours</p>
+          <div class="forecast-grid" id="forecastGrid"></div>
+        </div>
+
+        <div class="card">
+          <h3>Weekly Trend Prediction</h3>
+          <div class="chart-wrapper">
+            <canvas id="forecastChart"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <!-- ANALYTICS PAGE -->
+      <div class="page-section" id="analytics-page">
+        <div class="card">
+          <h3>Monthly Statistics</h3>
+          <p class="muted">Air quality analysis for the current month</p>
+          <div class="stat-grid">
+            <div class="stat-item">
+              <div class="stat-label">Average AQI</div>
+              <div class="stat-value" id="avgAqi">--</div>
+            </div>
+            <div class="stat-item">
+              <div class="stat-label">Best Day</div>
+              <div class="stat-value" id="bestDay">--</div>
+            </div>
+            <div class="stat-item">
+              <div class="stat-label">Worst Day</div>
+              <div class="stat-value" id="worstDay">--</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3>Pollutant Breakdown</h3>
+          <p class="muted">Current levels of all monitored pollutants</p>
+          <div class="chart-wrapper">
+            <canvas id="radarChart"></canvas>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3>Time of Day Analysis</h3>
+          <p class="muted">Average AQI by hour</p>
+          <div class="chart-wrapper">
+            <canvas id="hourlyChart"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <!-- HEALTH PAGE -->
+      <div class="page-section" id="health-page">
+        <div class="card">
+          <h3>Health Risk Calculator</h3>
+          <p class="muted">Estimate your health risk based on exposure</p>
+          <div class="calculator-form">
+            <div class="form-group">
+              <label>Age Group</label>
+              <select id="ageGroup">
+                <option value="child">Child (0-12)</option>
+                <option value="teen">Teen (13-19)</option>
+                <option value="adult" selected>Adult (20-64)</option>
+                <option value="senior">Senior (65+)</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Outdoor Exposure (hours/day)</label>
+              <input type="number" id="exposureTime" value="2" min="0" max="24" />
+            </div>
+            <div class="form-group">
+              <label>Health Condition</label>
+              <select id="healthCondition">
+                <option value="healthy" selected>Healthy</option>
+                <option value="asthma">Asthma</option>
+                <option value="heart">Heart Disease</option>
+                <option value="respiratory">Respiratory Issues</option>
+              </select>
+            </div>
+            <button class="btn secondary" id="calculateRisk">Calculate Risk</button>
+          </div>
+          <div class="risk-result" id="riskResult" style="display: none;">
+            <div class="risk-level" id="riskLevel">--</div>
+            <p class="muted" id="riskAdvice">--</p>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3>Health Recommendations</h3>
+          <p class="muted">Based on current AQI levels</p>
+          <ul class="snapshot-list" id="healthRecommendations"></ul>
+        </div>
+      </div>
+
+      <!-- ALERTS PAGE -->
+      <div class="page-section" id="alerts-page">
+        <div class="card">
+          <h3>Alert Settings</h3>
+          <p class="muted">Configure your alert preferences</p>
+          <div class="calculator-form">
+            <div class="form-group">
+              <label>AQI Alert Threshold</label>
+              <input type="number" id="alertThreshold2" value="150" min="0" />
+            </div>
+            <div class="form-group">
+              <label>PM2.5 Threshold (µg/m³)</label>
+              <input type="number" id="pm25Threshold" value="55" min="0" />
+            </div>
+            <div class="form-group">
+              <label>PM10 Threshold (µg/m³)</label>
+              <input type="number" id="pm10Threshold" value="154" min="0" />
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3>Alert History</h3>
+          <p class="muted">Recent pollution alerts</p>
+          <div class="alert-history" id="alertHistory"></div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <span>AirWatch · Real-Time Air Quality Monitoring Dashboard</span>
+    <span id="footerStatus">Realtime: ON</span>
+  </footer>
+
+  <!-- Main JS -->
+  <script src="script.js"></script>
+</body>
+</html>
